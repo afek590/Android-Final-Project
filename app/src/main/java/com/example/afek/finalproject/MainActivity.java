@@ -2,10 +2,13 @@ package com.example.afek.finalproject;
 
 import android.Manifest;
 import android.app.Activity;
+import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
+import android.graphics.Bitmap;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
@@ -20,6 +23,10 @@ import android.view.View;
 import android.widget.GridLayout;
 import android.widget.GridView;
 import android.widget.ImageButton;
+import android.widget.Toast;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener
 {
@@ -32,7 +39,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private GridViewAdapter gridAdapter;
     private Location currentLocation;
     private DbHelper dbHelper;
-    SQLiteDatabase readDb, writeDb;
+    private SQLiteDatabase db;
+    private Cursor cursor;
+    private List<ImageItem> imageItemList;
 
     @Override
     protected void onCreate(Bundle savedInstanceState)
@@ -40,6 +49,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        imageItemList = new ArrayList<ImageItem>();
         editBtn = (ImageButton) findViewById(R.id.edit_button);
         searchBtn = (ImageButton) findViewById(R.id.search_button);
         cameraBtn = (ImageButton) findViewById(R.id.camera_button);
@@ -52,9 +62,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         permissionCheck();
         dbHelper = new DbHelper(this);
-        readDb = dbHelper.getReadableDatabase();
-        writeDb = dbHelper.getWritableDatabase();
-
+        db = dbHelper.getWritableDatabase();
+        updateImageArray();
     }
 
     private void permissionCheck()
@@ -71,11 +80,13 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     {
         if (v.getId() == editBtn.getId())
         {
-
         }
         else if (v.getId() == searchBtn.getId())
         {
-
+            for(int i=0; i<imageItemList.size(); i++)
+            {
+                Log.v("Long: " + imageItemList.get(i).getLongitude(), " , Lati: " + imageItemList.get(i).getLatitude());
+            }
         }
         else if (v.getId() == cameraBtn.getId())
         {
@@ -94,19 +105,13 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             }
 
             @Override
-            public void onStatusChanged(String provider, int status, Bundle extras) {
-
-            }
+            public void onStatusChanged(String provider, int status, Bundle extras) {}
 
             @Override
-            public void onProviderEnabled(String provider) {
-
-            }
+            public void onProviderEnabled(String provider) {}
 
             @Override
-            public void onProviderDisabled(String provider) {
-
-            }
+            public void onProviderDisabled(String provider) {}
         };
 
         if(ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED)
@@ -120,7 +125,27 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         super.onActivityResult(requestCode, resultCode, data);
         if(requestCode == CAMERA_REQUEST && resultCode == Activity.RESULT_OK)
         {
+            Bitmap photo = (Bitmap) data.getExtras().get("data");
+            ContentValues values = new  ContentValues();
+            values.put(Constants.Gallery.KEY_DATA, ImageUtils.getBytes(photo));
+            values.put(Constants.Gallery.KEY_LATI, currentLocation.getLatitude());
+            values.put(Constants.Gallery.KEY_LONG, currentLocation.getLongitude());
+            db.insert(Constants.Gallery.TABLE_NAME, null, values);
+            updateImageArray();
+        }
+    }
 
+    private void updateImageArray()
+    {
+        cursor = db.query(Constants.Gallery.TABLE_NAME, null, null, null, null, null, null);
+        while(cursor.moveToNext())
+        {
+            ImageItem imageItem = new ImageItem();
+            imageItem.setId(cursor.getInt(0));
+            imageItem.setImage(ImageUtils.getImage(cursor.getBlob(1)));
+            imageItem.setLongitude(cursor.getDouble(2));
+            imageItem.setLatitude(cursor.getDouble(3));
+            imageItemList.add(imageItem);
         }
     }
 }

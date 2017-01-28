@@ -7,6 +7,47 @@ import android.graphics.Bitmap;
  */
 public class ImageItem
 {
+    private int id;
     private Bitmap image;
     private double longitude, latitude;
+
+    public void setImage(Bitmap image)
+    {
+        this.image = image;
+    }
+
+    public void setLongitude(double longitude)
+    {
+        this.longitude = longitude;
+    }
+
+    public void setLatitude(double latitude)
+    {
+        this.latitude = latitude;
+    }
+
+    public void setId(int id)
+    {
+        this.id = id;
+    }
+
+    public Bitmap getImage()
+    {
+        return image;
+    }
+
+    public double getLongitude()
+    {
+        return longitude;
+    }
+
+    public double getLatitude()
+    {
+        return latitude;
+    }
+
+    public int getId()
+    {
+        return id;
+    }
 }
