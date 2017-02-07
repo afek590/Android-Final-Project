@@ -16,22 +16,48 @@ import java.util.ArrayList;
 /**
  * Created by Afek on 25/01/2017.
  */
-public class GridViewAdapter extends ArrayAdapter
+public class GridViewAdapter extends BaseAdapter
 {
-    private Context context;
-    private int layoutResourceId;
+    private Context mContext;
 
-    public GridViewAdapter(Context context, int resource)
+    public GridViewAdapter(Context c)
     {
-        super(context, resource);
-        this.context = context;
-        this.layoutResourceId = resource;
+        mContext = c;
+    }
+
+    @Override
+    public int getCount()
+    {
+        return MainActivity.imageItemList.size();
+    }
+
+    @Override
+    public Object getItem(int position)
+    {
+        return null;
+    }
+
+    @Override
+    public long getItemId(int position)
+    {
+        return 0;
     }
 
     @NonNull
     @Override
     public View getView(int position, View convertView, ViewGroup parent)
     {
-        return super.getView(position, convertView, parent);
+        ImageView imageView;
+        if(convertView == null)
+        {
+            imageView = new ImageView(mContext);
+            imageView.setLayoutParams(new GridView.LayoutParams(85, 85));
+            imageView.setScaleType(ImageView.ScaleType.CENTER_CROP);
+            imageView.setPadding(8, 8, 8, 8);
+        }
+        else
+            imageView = (ImageView) convertView;
+        imageView.setImageBitmap(MainActivity.imageItemList.get(position).getImage());
+        return imageView;
     }
 }

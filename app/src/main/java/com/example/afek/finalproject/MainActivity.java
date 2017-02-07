@@ -2,8 +2,10 @@ package com.example.afek.finalproject;
 
 import android.Manifest;
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.content.ContentValues;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
@@ -19,7 +21,10 @@ import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.View;
+import android.widget.AdapterView;
+import android.widget.EditText;
 import android.widget.GridLayout;
 import android.widget.GridView;
 import android.widget.ImageButton;
@@ -39,9 +44,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private GridViewAdapter gridAdapter;
     private Location currentLocation;
     private DbHelper dbHelper;
-    private SQLiteDatabase db;
+    private static SQLiteDatabase db;
     private Cursor cursor;
-    private List<ImageItem> imageItemList;
+    public static List<ImageItem> imageItemList;
+    private AlertDialog alertDialog;
 
     @Override
     protected void onCreate(Bundle savedInstanceState)
@@ -56,9 +62,22 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         editBtn.setOnClickListener(this);
         searchBtn.setOnClickListener(this);
         cameraBtn.setOnClickListener(this);
+        initPopupWindow();
         gridView = (GridView) findViewById(R.id.gridView);
-        gridAdapter = new GridViewAdapter(this, R.layout.grid_item);
+        gridAdapter = new GridViewAdapter(this);
         gridView.setAdapter(gridAdapter);
+        gridView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id)
+            {
+                Intent i = new Intent(getApplicationContext(), GridItemActivity.class);
+                i.putExtra("id", imageItemList.get(position).getId());
+                i.putExtra("data", ImageUtils.getBytes(imageItemList.get(position).getImage()));
+                i.putExtra("longitude", imageItemList.get(position).getLongitude());
+                i.putExtra("latitude", imageItemList.get(position).getLatitude());
+                startActivity(i);
+            }
+        });
 
         permissionCheck();
         dbHelper = new DbHelper(this);
@@ -71,8 +90,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         int permissionCheck = ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION);
         if(permissionCheck == PackageManager.PERMISSION_DENIED)
             ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, GPS_PERMISSION);
-        else
-            setLocationMethod();
+        setLocationMethod();
     }
 
     @Override
@@ -83,16 +101,18 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }
         else if (v.getId() == searchBtn.getId())
         {
-            for(int i=0; i<imageItemList.size(); i++)
-            {
-                Log.v("Long: " + imageItemList.get(i).getLongitude(), " , Lati: " + imageItemList.get(i).getLatitude());
-            }
+
         }
         else if (v.getId() == cameraBtn.getId())
         {
             Intent cameraIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
             startActivityForResult(cameraIntent, CAMERA_REQUEST);
         }
+    }
+
+    private void initPopupWindow()
+    {
+        
     }
 
     private void setLocationMethod()
@@ -117,6 +137,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         if(ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED)
             return;
         locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, MIN_TIME_FOR_UPDATE, MIN_DIS_FOR_UPDATE, locationListener);
+        currentLocation = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
     }
 
     @Override
@@ -137,6 +158,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     private void updateImageArray()
     {
+        imageItemList.clear();
         cursor = db.query(Constants.Gallery.TABLE_NAME, null, null, null, null, null, null);
         while(cursor.moveToNext())
         {
@@ -147,5 +169,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             imageItem.setLatitude(cursor.getDouble(3));
             imageItemList.add(imageItem);
         }
+    }
+
+    public static void deletePicture(int id)
+    {
+        db.delete(Constants.Gallery.TABLE_NAME, Constants.Gallery._ID + "=?", new String[] { String.valueOf(id) });
     }
 }
