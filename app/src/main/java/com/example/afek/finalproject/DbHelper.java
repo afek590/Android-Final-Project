@@ -18,11 +18,12 @@ public class DbHelper extends SQLiteOpenHelper
                     Constants.Gallery._ID + " INTEGER PRIMARY KEY," +
                     Constants.Gallery.KEY_DATA + " BLOB," +
                     Constants.Gallery.KEY_LONG + " DOUBLE," +
-                    Constants.Gallery.KEY_LATI + " DOUBLE" +
+                    Constants.Gallery.KEY_LATI + " DOUBLE," +
+                    Constants.Gallery.KEY_ADDR + " VARCHAR" +
                     ");";
 
     private static final String SQL_DELETE_ENTRIES =
-            "DROP TABLE IF EXIST " + Constants.Gallery.TABLE_NAME;
+            "DROP TABLE IF EXISTS " + Constants.Gallery.TABLE_NAME;
 
     public DbHelper(Context context)
     {

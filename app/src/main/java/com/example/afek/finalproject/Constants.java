@@ -20,5 +20,6 @@ public final class Constants
         public static final String KEY_DATA = "image_data";
         public static final String KEY_LONG = "image_longitude";
         public static final String KEY_LATI = "image_latitude";
+        public static final String KEY_ADDR = "image_address";
     }
 }

@@ -10,6 +10,7 @@ public class ImageItem
     private int id;
     private Bitmap image;
     private double longitude, latitude;
+    private String address;
 
     public void setImage(Bitmap image)
     {
@@ -49,5 +50,14 @@ public class ImageItem
     public int getId()
     {
         return id;
+    }
+
+    public void setAddress(String address) {
+        this.address = address;
+    }
+
+    public String getAddress() {
+
+        return address;
     }
 }

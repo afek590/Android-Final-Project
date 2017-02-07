@@ -11,6 +11,8 @@ import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.graphics.Bitmap;
+import android.location.Address;
+import android.location.Geocoder;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
@@ -23,6 +25,7 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.view.WindowManager;
 import android.widget.AdapterView;
 import android.widget.EditText;
 import android.widget.GridLayout;
@@ -30,8 +33,10 @@ import android.widget.GridView;
 import android.widget.ImageButton;
 import android.widget.Toast;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener
 {
@@ -46,8 +51,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private DbHelper dbHelper;
     private static SQLiteDatabase db;
     private Cursor cursor;
-    public static List<ImageItem> imageItemList;
-    private AlertDialog alertDialog;
+    public static ArrayList<ImageItem> imageItemList;
+    private String searchStr;
 
     @Override
     protected void onCreate(Bundle savedInstanceState)
@@ -55,6 +60,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        // Basic Initializes
         imageItemList = new ArrayList<ImageItem>();
         editBtn = (ImageButton) findViewById(R.id.edit_button);
         searchBtn = (ImageButton) findViewById(R.id.search_button);
@@ -62,7 +68,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         editBtn.setOnClickListener(this);
         searchBtn.setOnClickListener(this);
         cameraBtn.setOnClickListener(this);
-        initPopupWindow();
         gridView = (GridView) findViewById(R.id.gridView);
         gridAdapter = new GridViewAdapter(this);
         gridView.setAdapter(gridAdapter);
@@ -75,10 +80,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 i.putExtra("data", ImageUtils.getBytes(imageItemList.get(position).getImage()));
                 i.putExtra("longitude", imageItemList.get(position).getLongitude());
                 i.putExtra("latitude", imageItemList.get(position).getLatitude());
+                i.putExtra("address", imageItemList.get(position).getAddress());
                 startActivity(i);
             }
         });
-
+        searchStr = "";
         permissionCheck();
         dbHelper = new DbHelper(this);
         db = dbHelper.getWritableDatabase();
@@ -101,18 +107,36 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }
         else if (v.getId() == searchBtn.getId())
         {
+            AlertDialog.Builder alert = new AlertDialog.Builder(this);
+            alert.setTitle("Search");
+            alert.setMessage("Enter a location");
+            final EditText input = new EditText(this);
+            input.setText(searchStr.toString());
+            alert.setView(input);
 
+            alert.setPositiveButton("Ok", new DialogInterface.OnClickListener()
+            {
+                public void onClick(DialogInterface dialog, int whichButton) {
+                    searchStr = input.getText().toString();
+                    gridAdapter.getFilter().filter(searchStr);
+                }
+            });
+
+            alert.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+                public void onClick(DialogInterface dialog, int whichButton) {
+                    searchStr = "";
+                    gridAdapter.getFilter().filter(searchStr);
+                }
+            });
+
+            alert.show();
+            Log.v("Count: ", "" + imageItemList.size());
         }
         else if (v.getId() == cameraBtn.getId())
         {
             Intent cameraIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
             startActivityForResult(cameraIntent, CAMERA_REQUEST);
         }
-    }
-
-    private void initPopupWindow()
-    {
-        
     }
 
     private void setLocationMethod()
@@ -147,10 +171,13 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         if(requestCode == CAMERA_REQUEST && resultCode == Activity.RESULT_OK)
         {
             Bitmap photo = (Bitmap) data.getExtras().get("data");
+            double latitude = currentLocation.getLatitude();
+            double longitude = currentLocation.getLongitude();
             ContentValues values = new  ContentValues();
             values.put(Constants.Gallery.KEY_DATA, ImageUtils.getBytes(photo));
-            values.put(Constants.Gallery.KEY_LATI, currentLocation.getLatitude());
-            values.put(Constants.Gallery.KEY_LONG, currentLocation.getLongitude());
+            values.put(Constants.Gallery.KEY_LATI, latitude);
+            values.put(Constants.Gallery.KEY_LONG, longitude);
+            values.put(Constants.Gallery.KEY_ADDR, getAddress(latitude, longitude));
             db.insert(Constants.Gallery.TABLE_NAME, null, values);
             updateImageArray();
         }
@@ -167,12 +194,43 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             imageItem.setImage(ImageUtils.getImage(cursor.getBlob(1)));
             imageItem.setLongitude(cursor.getDouble(2));
             imageItem.setLatitude(cursor.getDouble(3));
+            imageItem.setAddress(cursor.getString(4));
             imageItemList.add(imageItem);
         }
+        gridAdapter.update();
     }
 
     public static void deletePicture(int id)
     {
         db.delete(Constants.Gallery.TABLE_NAME, Constants.Gallery._ID + "=?", new String[] { String.valueOf(id) });
+    }
+
+    private String getAddress(double latitude, double longitude)
+    {
+        Geocoder geocoder;
+        List<Address> addrList;
+        Address finalAddr;
+        geocoder = new Geocoder(this, Locale.getDefault());
+        String strAdd = "";
+        try
+        {
+            addrList = geocoder.getFromLocation(latitude, longitude, 1);
+            if(addrList != null && addrList.size() > 0)
+            {
+                finalAddr = addrList.get(0);
+                StringBuilder strReturnedAddress = new StringBuilder("");
+                for (int i = 0; i < finalAddr.getMaxAddressLineIndex(); i++)
+                    strReturnedAddress.append(finalAddr.getAddressLine(i)).append("\n");
+                strAdd = strReturnedAddress.toString();
+            }
+            else
+                return "Location unavailable.";
+        }
+        catch (IOException e)
+        {
+            e.printStackTrace();
+            return "Location unavailable.";
+        }
+        return strAdd;
     }
 }

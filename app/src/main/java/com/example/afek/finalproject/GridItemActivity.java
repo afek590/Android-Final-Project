@@ -23,12 +23,10 @@ public class GridItemActivity extends AppCompatActivity implements View.OnClickL
     private int id;
     private Bitmap image;
     private double longitude, latitude;
+    private String address;
     private ImageView imageView;
     private TextView textView;
     private Button delete;
-    private Geocoder geocoder;
-    private List<Address> addrList;
-    private Address finalAddr;
 
     @Override
     protected void onCreate(Bundle savedInstanceState)
@@ -41,13 +39,14 @@ public class GridItemActivity extends AppCompatActivity implements View.OnClickL
         image = ImageUtils.getImage(i.getByteArrayExtra("data"));
         longitude = i.getDoubleExtra("longitude", -1);
         latitude = i.getDoubleExtra("latitude", -1);
+        address = i.getStringExtra("address");
         checkExtras();
         imageView = (ImageView) findViewById(R.id.imageView);
         textView = (TextView) findViewById(R.id.textView);
         delete = (Button) findViewById(R.id.delBtn);
         delete.setOnClickListener(this);
         textView.setOnClickListener(this);
-        textView.setText(getAddress());
+        textView.setText(address);
         imageView.setImageBitmap(image);
     }
 
@@ -76,29 +75,5 @@ public class GridItemActivity extends AppCompatActivity implements View.OnClickL
         }
     }
 
-    private String getAddress()
-    {
-        geocoder = new Geocoder(this, Locale.getDefault());
-        String strAdd = "";
-        try
-        {
-            addrList = geocoder.getFromLocation(latitude, longitude, 1);
-            if(addrList != null && addrList.size() > 0)
-            {
-                finalAddr = addrList.get(0);
-                StringBuilder strReturnedAddress = new StringBuilder("");
-                for (int i = 0; i < finalAddr.getMaxAddressLineIndex(); i++)
-                    strReturnedAddress.append(finalAddr.getAddressLine(i)).append("\n");
-                strAdd = strReturnedAddress.toString();
-            }
-            else
-                return "Location unavailable.";
-        }
-        catch (IOException e)
-        {
-            e.printStackTrace();
-            return "Location unavailable.";
-        }
-        return strAdd;
-    }
+
 }
