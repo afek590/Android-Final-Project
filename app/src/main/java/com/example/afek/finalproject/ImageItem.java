@@ -11,6 +11,7 @@ public class ImageItem
     private Bitmap image;
     private double longitude, latitude;
     private String address;
+    private boolean isChecked = false;
 
     public void setImage(Bitmap image)
     {
@@ -59,5 +60,18 @@ public class ImageItem
     public String getAddress() {
 
         return address;
+    }
+
+    public boolean isChecked() {
+        return isChecked;
+    }
+
+    public void setChecked() {
+        isChecked = !isChecked;
+    }
+
+    public void setValueCheck(boolean check)
+    {
+        isChecked = check;
     }
 }

@@ -53,6 +53,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private Cursor cursor;
     public static ArrayList<ImageItem> imageItemList;
     private String searchStr;
+    private boolean editEnable;
 
     @Override
     protected void onCreate(Bundle savedInstanceState)
@@ -75,16 +76,25 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id)
             {
-                Intent i = new Intent(getApplicationContext(), GridItemActivity.class);
-                i.putExtra("id", imageItemList.get(position).getId());
-                i.putExtra("data", ImageUtils.getBytes(imageItemList.get(position).getImage()));
-                i.putExtra("longitude", imageItemList.get(position).getLongitude());
-                i.putExtra("latitude", imageItemList.get(position).getLatitude());
-                i.putExtra("address", imageItemList.get(position).getAddress());
-                startActivity(i);
+                if(editEnable)
+                {
+                    imageItemList.get(position).setChecked();
+                    gridAdapter.notifyDataSetChanged();
+                }
+                else
+                {
+                    Intent i = new Intent(getApplicationContext(), GridItemActivity.class);
+                    i.putExtra("id", imageItemList.get(position).getId());
+                    i.putExtra("data", ImageUtils.getBytes(imageItemList.get(position).getImage()));
+                    i.putExtra("longitude", imageItemList.get(position).getLongitude());
+                    i.putExtra("latitude", imageItemList.get(position).getLatitude());
+                    i.putExtra("address", imageItemList.get(position).getAddress());
+                    startActivity(i);
+                }
             }
         });
         searchStr = "";
+        editEnable = false;
         permissionCheck();
         dbHelper = new DbHelper(this);
         db = dbHelper.getWritableDatabase();
@@ -104,33 +114,57 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     {
         if (v.getId() == editBtn.getId())
         {
+            if(editEnable)
+            {
+                searchBtn.setImageResource(android.R.drawable.ic_menu_search);
+                resetCheckedImages();
+                gridAdapter.notifyDataSetChanged();
+            }
+            else
+            {
+                searchBtn.setImageResource(android.R.drawable.ic_menu_delete);
+            }
+            editEnable = !editEnable;
         }
         else if (v.getId() == searchBtn.getId())
         {
-            AlertDialog.Builder alert = new AlertDialog.Builder(this);
-            alert.setTitle("Search");
-            alert.setMessage("Enter a location");
-            final EditText input = new EditText(this);
-            input.setText(searchStr.toString());
-            alert.setView(input);
-
-            alert.setPositiveButton("Ok", new DialogInterface.OnClickListener()
+            if(editEnable)
             {
-                public void onClick(DialogInterface dialog, int whichButton) {
-                    searchStr = input.getText().toString();
-                    gridAdapter.getFilter().filter(searchStr);
+                for(int i=0; i<imageItemList.size(); i++)
+                {
+                    if(imageItemList.get(i).isChecked())
+                        deletePicture(imageItemList.get(i).getId());
                 }
-            });
+                searchBtn.setImageResource(android.R.drawable.ic_menu_search);
+                editEnable = false;
+                updateImageArray();
+            }
+            else
+            {
+                AlertDialog.Builder alert = new AlertDialog.Builder(this);
+                alert.setTitle("Search");
+                alert.setMessage("Enter a location");
+                final EditText input = new EditText(this);
+                input.setText(searchStr.toString());
+                alert.setView(input);
 
-            alert.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
-                public void onClick(DialogInterface dialog, int whichButton) {
-                    searchStr = "";
-                    gridAdapter.getFilter().filter(searchStr);
-                }
-            });
+                alert.setPositiveButton("Ok", new DialogInterface.OnClickListener()
+                {
+                    public void onClick(DialogInterface dialog, int whichButton) {
+                        searchStr = input.getText().toString();
+                        gridAdapter.getFilter().filter(searchStr);
+                    }
+                });
 
-            alert.show();
-            Log.v("Count: ", "" + imageItemList.size());
+                alert.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int whichButton) {
+                        searchStr = "";
+                        gridAdapter.getFilter().filter(searchStr);
+                    }
+                });
+
+                alert.show();
+            }
         }
         else if (v.getId() == cameraBtn.getId())
         {
@@ -171,8 +205,13 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         if(requestCode == CAMERA_REQUEST && resultCode == Activity.RESULT_OK)
         {
             Bitmap photo = (Bitmap) data.getExtras().get("data");
-            double latitude = currentLocation.getLatitude();
-            double longitude = currentLocation.getLongitude();
+            double latitude = -1;
+            double longitude = -1;
+            if(currentLocation != null)
+            {
+                latitude = currentLocation.getLatitude();
+                longitude = currentLocation.getLongitude();
+            }
             ContentValues values = new  ContentValues();
             values.put(Constants.Gallery.KEY_DATA, ImageUtils.getBytes(photo));
             values.put(Constants.Gallery.KEY_LATI, latitude);
@@ -197,6 +236,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             imageItem.setAddress(cursor.getString(4));
             imageItemList.add(imageItem);
         }
+        searchStr = "";
         gridAdapter.update();
     }
 
@@ -207,6 +247,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     private String getAddress(double latitude, double longitude)
     {
+        if(latitude == -1 || longitude == -1)
+            return "Location unavailable.";
         Geocoder geocoder;
         List<Address> addrList;
         Address finalAddr;
@@ -232,5 +274,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             return "Location unavailable.";
         }
         return strAdd;
+    }
+
+    private void resetCheckedImages()
+    {
+        for(int i=0; i<imageItemList.size(); i++)
+            imageItemList.get(i).setValueCheck(false);
+        gridAdapter.notifyDataSetChanged();
     }
 }

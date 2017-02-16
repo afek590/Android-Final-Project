@@ -2,6 +2,7 @@ package com.example.afek.finalproject;
 
 import android.app.Activity;
 import android.content.Context;
+import android.graphics.Color;
 import android.support.annotation.NonNull;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -63,13 +64,17 @@ public class GridViewAdapter extends BaseAdapter implements Filterable
         if(convertView == null)
         {
             imageView = new ImageView(mContext);
-            imageView.setLayoutParams(new GridView.LayoutParams(85, 85));
+            imageView.setLayoutParams(new GridView.LayoutParams(300, 225));
             imageView.setScaleType(ImageView.ScaleType.CENTER_CROP);
             imageView.setPadding(8, 8, 8, 8);
         }
         else
             imageView = (ImageView) convertView;
         imageView.setImageBitmap(MainActivity.imageItemList.get(position).getImage());
+        if(MainActivity.imageItemList.get(position).isChecked())
+            imageView.setBackgroundColor(Color.YELLOW);
+        else
+            imageView.setBackgroundColor(Color.TRANSPARENT);
         return imageView;
     }
 
