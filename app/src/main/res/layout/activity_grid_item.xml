@@ -11,7 +11,8 @@
     android:paddingTop="@dimen/activity_vertical_margin"
     tools:context="com.example.afek.finalproject.GridItemActivity"
     android:orientation="vertical"
-    android:weightSum="1">
+    android:weightSum="1"
+    android:background="@color/background">
 
     <ImageView
         android:layout_width="match_parent"
@@ -29,8 +30,9 @@
         android:fontFamily="serif"
         android:typeface="normal"
         android:textSize="18sp"
-        android:textColor="@android:color/black"
-        android:clickable="true" />
+        android:textColor="@color/white"
+        android:clickable="true"
+        android:gravity="center" />
 
     <Button
         android:text="Delete"
@@ -38,5 +40,5 @@
         android:layout_height="wrap_content"
         android:id="@+id/delBtn"
         android:layout_weight="0.03"
-        tools:background="@android:color/holo_red_dark" />
+        android:background="@android:color/holo_red_dark" />
 </LinearLayout>
