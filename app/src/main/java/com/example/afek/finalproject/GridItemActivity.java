@@ -37,8 +37,8 @@ public class GridItemActivity extends AppCompatActivity implements View.OnClickL
         Intent i = getIntent();
         id = i.getIntExtra("id", -1);
         image = ImageUtils.getImage(i.getByteArrayExtra("data"));
-        longitude = i.getDoubleExtra("longitude", -1);
-        latitude = i.getDoubleExtra("latitude", -1);
+        longitude = i.getDoubleExtra("longitude", 200);
+        latitude = i.getDoubleExtra("latitude", 200);
         address = i.getStringExtra("address");
         checkExtras();
         imageView = (ImageView) findViewById(R.id.imageView);
@@ -50,9 +50,9 @@ public class GridItemActivity extends AppCompatActivity implements View.OnClickL
         imageView.setImageBitmap(image);
     }
 
-    private void checkExtras()
+    private void checkExtras() // If some data is unavailable or have error we finish the activity.
     {
-        if(id == -1 || image == null || longitude == -1 || latitude == -1)
+        if(id == -1 || image == null || longitude == 200 || latitude == 200)
         {
             setResult(RESULT_CANCELED);
             finish();
@@ -62,12 +62,12 @@ public class GridItemActivity extends AppCompatActivity implements View.OnClickL
     @Override
     public void onClick(View v)
     {
-        if(v.getId() == delete.getId())
+        if(v.getId() == delete.getId()) // Delete the picture from the database.
         {
             MainActivity.deletePicture(id);
             startActivity(new Intent(this, MainActivity.class));
         }
-        else if(v.getId() == textView.getId())
+        else if(v.getId() == textView.getId()) // See the picture's location on google maps.
         {
             Intent intent = new Intent(Intent.ACTION_VIEW);
             intent.setData(Uri.parse("geo:0,0?q=" + (latitude + "," + longitude)));

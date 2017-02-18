@@ -41,13 +41,13 @@ public class GridViewAdapter extends BaseAdapter implements Filterable
     @Override
     public Object getItem(int position)
     {
-        return null;
+        return MainActivity.imageItemList.get(position);
     }
 
     @Override
     public long getItemId(int position)
     {
-        return 0;
+        return ((ImageItem) getItem(position)).getId();
     }
 
     public void update()
@@ -58,7 +58,7 @@ public class GridViewAdapter extends BaseAdapter implements Filterable
 
     @NonNull
     @Override
-    public View getView(int position, View convertView, ViewGroup parent)
+    public View getView(int position, View convertView, ViewGroup parent) // Define the data which will display in the grid view.
     {
         ImageView imageView;
         if(convertView == null)
@@ -71,7 +71,7 @@ public class GridViewAdapter extends BaseAdapter implements Filterable
         else
             imageView = (ImageView) convertView;
         imageView.setImageBitmap(MainActivity.imageItemList.get(position).getImage());
-        if(MainActivity.imageItemList.get(position).isChecked())
+        if(MainActivity.imageItemList.get(position).isChecked()) // If the picture is marked we set it a yellow border.
             imageView.setBackgroundColor(Color.YELLOW);
         else
             imageView.setBackgroundColor(Color.TRANSPARENT);
@@ -88,7 +88,7 @@ public class GridViewAdapter extends BaseAdapter implements Filterable
         return filter;
     }
 
-    class CustomFilter extends Filter
+    class CustomFilter extends Filter // Filter class to implement the search functionality.
     {
         @Override
         protected FilterResults performFiltering(CharSequence constraint)
@@ -118,7 +118,7 @@ public class GridViewAdapter extends BaseAdapter implements Filterable
         }
 
         @Override
-        protected void publishResults(CharSequence constraint, FilterResults results)
+        protected void publishResults(CharSequence constraint, FilterResults results) // Updating the image list according to the search.
         {
             MainActivity.imageItemList = (ArrayList<ImageItem>) results.values;
             notifyDataSetChanged();

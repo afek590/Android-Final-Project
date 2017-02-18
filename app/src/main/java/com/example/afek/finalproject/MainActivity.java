@@ -44,6 +44,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private final int CAMERA_REQUEST = 1888;
     private final long MIN_TIME_FOR_UPDATE = 500;
     private final long MIN_DIS_FOR_UPDATE = 0;
+    private final String NO_LOCATION = "Location unavailable.";
     private ImageButton editBtn, searchBtn, cameraBtn;
     private GridView gridView;
     private GridViewAdapter gridAdapter;
@@ -74,14 +75,14 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         gridView.setAdapter(gridAdapter);
         gridView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
-            public void onItemClick(AdapterView<?> parent, View view, int position, long id)
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) // On click listener of the pictures in the grid
             {
-                if(editEnable)
+                if(editEnable) // If edit is enabled, click on a picture will mark it.
                 {
                     imageItemList.get(position).setChecked();
                     gridAdapter.notifyDataSetChanged();
                 }
-                else
+                else // If edit is disabled, click on a picture will transfer to the GridItemActivity
                 {
                     Intent i = new Intent(getApplicationContext(), GridItemActivity.class);
                     i.putExtra("id", imageItemList.get(position).getId());
@@ -101,7 +102,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         updateImageArray();
     }
 
-    private void permissionCheck()
+    private void permissionCheck() // Check the gps permissions.
     {
         int permissionCheck = ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION);
         if(permissionCheck == PackageManager.PERMISSION_DENIED)
@@ -112,23 +113,23 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     @Override
     public void onClick(View v)
     {
-        if (v.getId() == editBtn.getId())
+        if (v.getId() == editBtn.getId()) // Click on the edit button
         {
-            if(editEnable)
+            if(editEnable) // If edit already enabled, we unmark all the pictures in the grid and the other button will switch back to 'search'.
             {
                 searchBtn.setImageResource(android.R.drawable.ic_menu_search);
                 resetCheckedImages();
                 gridAdapter.notifyDataSetChanged();
             }
-            else
+            else // If edit is disabled, the other button will switch to 'delete' and marking pictures is enabled.
             {
                 searchBtn.setImageResource(android.R.drawable.ic_menu_delete);
             }
             editEnable = !editEnable;
         }
-        else if (v.getId() == searchBtn.getId())
+        else if (v.getId() == searchBtn.getId()) // Click on the search\delete button
         {
-            if(editEnable)
+            if(editEnable) // If edit is enabled - the button is 'delete' button and on click we delete all the marked pictures.
             {
                 for(int i=0; i<imageItemList.size(); i++)
                 {
@@ -139,7 +140,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 editEnable = false;
                 updateImageArray();
             }
-            else
+            else // If edit is disabled - the button is 'search' button and on click we open a alert dialog to search pictures according to location.
             {
                 AlertDialog.Builder alert = new AlertDialog.Builder(this);
                 alert.setTitle("Search");
@@ -166,14 +167,14 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 alert.show();
             }
         }
-        else if (v.getId() == cameraBtn.getId())
+        else if (v.getId() == cameraBtn.getId()) // Camera button opens the camera to take a new picture.
         {
             Intent cameraIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
             startActivityForResult(cameraIntent, CAMERA_REQUEST);
         }
     }
 
-    private void setLocationMethod()
+    private void setLocationMethod() // Define the location listener and its settings
     {
         LocationManager locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
         LocationListener locationListener = new LocationListener() {
@@ -199,14 +200,14 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data)
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) // Returning from camera activity and saving the pictures and its information to the database.
     {
         super.onActivityResult(requestCode, resultCode, data);
         if(requestCode == CAMERA_REQUEST && resultCode == Activity.RESULT_OK)
         {
             Bitmap photo = (Bitmap) data.getExtras().get("data");
-            double latitude = -1;
-            double longitude = -1;
+            double latitude = 200;
+            double longitude = 200;
             if(currentLocation != null)
             {
                 latitude = currentLocation.getLatitude();
@@ -222,7 +223,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }
     }
 
-    private void updateImageArray()
+    private void updateImageArray() // Updating the image list according to the database.
     {
         imageItemList.clear();
         cursor = db.query(Constants.Gallery.TABLE_NAME, null, null, null, null, null, null);
@@ -240,15 +241,15 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         gridAdapter.update();
     }
 
-    public static void deletePicture(int id)
+    public static void deletePicture(int id) // Delete a picture from the database.
     {
         db.delete(Constants.Gallery.TABLE_NAME, Constants.Gallery._ID + "=?", new String[] { String.valueOf(id) });
     }
 
-    private String getAddress(double latitude, double longitude)
+    private String getAddress(double latitude, double longitude) // Getting the string of the address according to latitude and longitude.
     {
-        if(latitude == -1 || longitude == -1)
-            return "Location unavailable.";
+        if(latitude == 200 || longitude == 200)
+            return NO_LOCATION;
         Geocoder geocoder;
         List<Address> addrList;
         Address finalAddr;
@@ -266,17 +267,17 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 strAdd = strReturnedAddress.toString();
             }
             else
-                return "Location unavailable.";
+                return NO_LOCATION;
         }
         catch (IOException e)
         {
             e.printStackTrace();
-            return "Location unavailable.";
+            return NO_LOCATION;
         }
         return strAdd;
     }
 
-    private void resetCheckedImages()
+    private void resetCheckedImages() // Unmark all the pictures in the grid.
     {
         for(int i=0; i<imageItemList.size(); i++)
             imageItemList.get(i).setValueCheck(false);
