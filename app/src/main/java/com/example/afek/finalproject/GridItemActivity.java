@@ -52,7 +52,7 @@ public class GridItemActivity extends AppCompatActivity implements View.OnClickL
 
     private void checkExtras() // If some data is unavailable or have error we finish the activity.
     {
-        if(id == -1 || image == null || longitude == 200 || latitude == 200)
+        if(id == -1 || image == null)
         {
             setResult(RESULT_CANCELED);
             finish();
@@ -69,9 +69,12 @@ public class GridItemActivity extends AppCompatActivity implements View.OnClickL
         }
         else if(v.getId() == textView.getId()) // See the picture's location on google maps.
         {
-            Intent intent = new Intent(Intent.ACTION_VIEW);
-            intent.setData(Uri.parse("geo:0,0?q=" + (latitude + "," + longitude)));
-            startActivity(intent);
+            if(longitude != 200 && latitude != 200)
+            {
+                Intent intent = new Intent(Intent.ACTION_VIEW);
+                intent.setData(Uri.parse("geo:0,0?q=" + (latitude + "," + longitude)));
+                startActivity(intent);
+            }
         }
     }
 

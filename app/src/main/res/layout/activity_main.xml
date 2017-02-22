@@ -24,15 +24,17 @@
         android:verticalSpacing="10dp"
         android:horizontalSpacing="10dp"
         android:stretchMode="columnWidth"
-        android:gravity="center" />
+        android:gravity="center"
+        android:layout_weight="0.11" />
 
     <ImageButton
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        app:srcCompat="@android:drawable/ic_menu_camera"
+        android:layout_width="143dp"
+        android:layout_height="97dp"
+        app:srcCompat="@drawable/camera_btn3"
         android:id="@+id/camera_button"
-        android:layout_weight="0.96"
-        android:background="@color/mainColor"
-        tools:ignore="ContentDescription" />
+        android:background="@color/transparent"
+        tools:ignore="ContentDescription"
+        android:layout_gravity="center"
+        android:padding="0dp" />
 
 </LinearLayout>

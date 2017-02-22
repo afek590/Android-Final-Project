@@ -72,11 +72,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         imageItemList = new ArrayList<ImageItem>();
         toolbar = (Toolbar) findViewById(R.id.tool_bar);
         setSupportActionBar(toolbar);
-        //editBtn = (MenuItem) findViewById(R.id.edit_button);
-        //searchBtn = (MenuItem) findViewById(R.id.search_button);
+        editEnable = false;
         cameraBtn = (ImageButton) findViewById(R.id.camera_button);
-        //editBtn.setOnClickListener(this);
-        //searchBtn.setOnClickListener(this);
         cameraBtn.setOnClickListener(this);
         gridView = (GridView) findViewById(R.id.gridView);
         gridAdapter = new GridViewAdapter(this);
@@ -103,7 +100,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             }
         });
         searchStr = "";
-        editEnable = false;
         permissionCheck();
         dbHelper = new DbHelper(this);
         db = dbHelper.getWritableDatabase();
