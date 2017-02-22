@@ -3,6 +3,7 @@ package com.example.afek.finalproject;
 import android.Manifest;
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.content.ClipData;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -22,8 +23,11 @@ import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.WindowManager;
 import android.widget.AdapterView;
@@ -45,7 +49,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private final long MIN_TIME_FOR_UPDATE = 500;
     private final long MIN_DIS_FOR_UPDATE = 0;
     private final String NO_LOCATION = "Location unavailable.";
-    private ImageButton editBtn, searchBtn, cameraBtn;
+    private Toolbar toolbar;
+    private ImageButton cameraBtn;
+    private Menu menu;
     private GridView gridView;
     private GridViewAdapter gridAdapter;
     private Location currentLocation;
@@ -64,11 +70,13 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         // Basic Initializes
         imageItemList = new ArrayList<ImageItem>();
-        editBtn = (ImageButton) findViewById(R.id.edit_button);
-        searchBtn = (ImageButton) findViewById(R.id.search_button);
+        toolbar = (Toolbar) findViewById(R.id.tool_bar);
+        setSupportActionBar(toolbar);
+        //editBtn = (MenuItem) findViewById(R.id.edit_button);
+        //searchBtn = (MenuItem) findViewById(R.id.search_button);
         cameraBtn = (ImageButton) findViewById(R.id.camera_button);
-        editBtn.setOnClickListener(this);
-        searchBtn.setOnClickListener(this);
+        //editBtn.setOnClickListener(this);
+        //searchBtn.setOnClickListener(this);
         cameraBtn.setOnClickListener(this);
         gridView = (GridView) findViewById(R.id.gridView);
         gridAdapter = new GridViewAdapter(this);
@@ -113,61 +121,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     @Override
     public void onClick(View v)
     {
-        if (v.getId() == editBtn.getId()) // Click on the edit button
-        {
-            if(editEnable) // If edit already enabled, we unmark all the pictures in the grid and the other button will switch back to 'search'.
-            {
-                searchBtn.setImageResource(android.R.drawable.ic_menu_search);
-                resetCheckedImages();
-                gridAdapter.notifyDataSetChanged();
-            }
-            else // If edit is disabled, the other button will switch to 'delete' and marking pictures is enabled.
-            {
-                searchBtn.setImageResource(android.R.drawable.ic_menu_delete);
-            }
-            editEnable = !editEnable;
-        }
-        else if (v.getId() == searchBtn.getId()) // Click on the search\delete button
-        {
-            if(editEnable) // If edit is enabled - the button is 'delete' button and on click we delete all the marked pictures.
-            {
-                for(int i=0; i<imageItemList.size(); i++)
-                {
-                    if(imageItemList.get(i).isChecked())
-                        deletePicture(imageItemList.get(i).getId());
-                }
-                searchBtn.setImageResource(android.R.drawable.ic_menu_search);
-                editEnable = false;
-                updateImageArray();
-            }
-            else // If edit is disabled - the button is 'search' button and on click we open a alert dialog to search pictures according to location.
-            {
-                AlertDialog.Builder alert = new AlertDialog.Builder(this);
-                alert.setTitle("Search");
-                alert.setMessage("Enter a location");
-                final EditText input = new EditText(this);
-                input.setText(searchStr.toString());
-                alert.setView(input);
-
-                alert.setPositiveButton("Ok", new DialogInterface.OnClickListener()
-                {
-                    public void onClick(DialogInterface dialog, int whichButton) {
-                        searchStr = input.getText().toString();
-                        gridAdapter.getFilter().filter(searchStr);
-                    }
-                });
-
-                alert.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
-                    public void onClick(DialogInterface dialog, int whichButton) {
-                        searchStr = "";
-                        gridAdapter.getFilter().filter(searchStr);
-                    }
-                });
-
-                alert.show();
-            }
-        }
-        else if (v.getId() == cameraBtn.getId()) // Camera button opens the camera to take a new picture.
+        if(v.getId() == cameraBtn.getId()) // Camera button opens the camera to take a new picture.
         {
             Intent cameraIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
             startActivityForResult(cameraIntent, CAMERA_REQUEST);
@@ -282,5 +236,75 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         for(int i=0; i<imageItemList.size(); i++)
             imageItemList.get(i).setValueCheck(false);
         gridAdapter.notifyDataSetChanged();
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu)
+    {
+        getMenuInflater().inflate(R.menu.menu_main, menu);
+        this.menu = menu;
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item)
+    {
+        int id = item.getItemId();
+        if(id == R.id.edit_button)
+        {
+            if(editEnable) // If edit already enabled, we unmark all the pictures in the grid and the other button will switch back to 'search'.
+            {
+                menu.findItem(R.id.search_button).setIcon(android.R.drawable.ic_menu_search);
+                resetCheckedImages();
+                gridAdapter.notifyDataSetChanged();
+            }
+            else // If edit is disabled, the other button will switch to 'delete' and marking pictures is enabled.
+            {
+                menu.findItem(R.id.search_button).setIcon(android.R.drawable.ic_menu_delete);
+            }
+            editEnable = !editEnable;
+        }
+        else if(id == R.id.search_button)
+        {
+            if(editEnable) // If edit is enabled - the button is 'delete' button and on click we delete all the marked pictures.
+            {
+                for(int i=0; i<imageItemList.size(); i++)
+                {
+                    if(imageItemList.get(i).isChecked())
+                        deletePicture(imageItemList.get(i).getId());
+                }
+                menu.findItem(R.id.search_button).setIcon(android.R.drawable.ic_menu_search);
+                editEnable = false;
+                updateImageArray();
+            }
+            else // If edit is disabled - the button is 'search' button and on click we open a alert dialog to search pictures according to location.
+            {
+                AlertDialog.Builder alert = new AlertDialog.Builder(this);
+                alert.setTitle("Search");
+                alert.setMessage("Enter a location");
+                final EditText input = new EditText(this);
+                input.setText(searchStr.toString());
+                alert.setView(input);
+
+                alert.setPositiveButton("Ok", new DialogInterface.OnClickListener()
+                {
+                    public void onClick(DialogInterface dialog, int whichButton) {
+                        searchStr = input.getText().toString();
+                        gridAdapter.getFilter().filter(searchStr);
+                    }
+                });
+
+                alert.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int whichButton) {
+                        searchStr = "";
+                        gridAdapter.getFilter().filter(searchStr);
+                    }
+                });
+
+                alert.show();
+            }
+        }
+
+        return super.onOptionsItemSelected(item);
     }
 }

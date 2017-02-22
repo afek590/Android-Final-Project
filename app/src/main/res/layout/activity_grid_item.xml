@@ -32,7 +32,8 @@
         android:textSize="18sp"
         android:textColor="@color/white"
         android:clickable="true"
-        android:gravity="center" />
+        android:gravity="center"
+        android:background="@color/topColor" />
 
     <Button
         android:text="Delete"
